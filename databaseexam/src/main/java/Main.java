@@ -1,7 +1,6 @@
 import com.mysql.cj.jdbc.Driver;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+
+import java.sql.*;
 
 
 public class Main {
@@ -9,22 +8,33 @@ public class Main {
     private static final String USERNAME = "root";
     private static final String PASS = "1111";
     public static void main(String[] args) {
-        Connection connection;
         try {
             Driver driver = new Driver();
             DriverManager.registerDriver(driver);
-            connection = DriverManager.getConnection(URL,USERNAME,PASS);
-
-            if (!connection.isClosed()){
-                System.out.println("Соединение с БД установлено");
-            }
-            connection.close();
-
-            if (connection.isClosed()){
-                System.out.println("Соединение с БД закрыто");
-            }
         } catch (SQLException sqlException) {
             System.err.println("Не удалось загрузить драйвер!");
         }
+        try(
+            Connection connection = DriverManager.getConnection(URL,USERNAME,PASS);
+            Statement statement =connection.createStatement();
+        )
+        {
+//            statement.execute("INSERT INTO animal (anim_name, anim_desc) VALUES ('name','desc')");
+//            int res=statement.executeUpdate("UPDATE animal SET anim_name='New Name' WHERE id=1");
+//            System.out.println("Изменено записей: " + res);
+//            ResultSet resultSet = statement.executeQuery("SELECT * FROM animal");
+            //пакетное выполнение комманд
+            statement.addBatch("INSERT INTO animal (anim_name, anim_desc) VALUES ('batch1','desc1')");
+            statement.addBatch("INSERT INTO animal (anim_name, anim_desc) VALUES ('batch2','desc2')");
+            statement.addBatch("INSERT INTO animal (anim_name, anim_desc) VALUES ('batch3','desc3')");
+            statement.executeBatch();
+            //очистка оереди запросов
+            statement.clearBatch();
+
+        }catch (SQLException sqlException){
+            System.err.println("Соединние с БД не установлено");
+            sqlException.printStackTrace();
+        }
+
     }
 }
